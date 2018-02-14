@@ -10,19 +10,27 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{45A3AD9B-CFD4-4072-A1E3-78FD9DE8F1D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{45A3AD9B-CFD4-4072-A1E3-78FD9DE8F1D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{45A3AD9B-CFD4-4072-A1E3-78FD9DE8F1D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{45A3AD9B-CFD4-4072-A1E3-78FD9DE8F1D2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FD37CB63-0C54-4809-91DC-43FCAA03D655}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FD37CB63-0C54-4809-91DC-43FCAA03D655}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FD37CB63-0C54-4809-91DC-43FCAA03D655}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FD37CB63-0C54-4809-91DC-43FCAA03D655}.Release|Any CPU.Build.0 = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Debug|x64.ActiveCfg = Debug|x64
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Debug|x64.Build.0 = Debug|x64
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Debug|x86.ActiveCfg = Debug|x86
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Debug|x86.Build.0 = Debug|x86
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Release|x64.ActiveCfg = Release|x64
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Release|x64.Build.0 = Release|x64
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Release|x86.ActiveCfg = Release|x86
+		{7F4A2CC1-58A5-4D0D-89EF-5BEF806B83AD}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal

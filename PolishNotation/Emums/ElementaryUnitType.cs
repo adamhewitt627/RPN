@@ -1,4 +1,4 @@
-﻿namespace PolishNotation.Emums
+﻿namespace PolishNotation.Enums
 {
     internal enum ElementaryUnitType
     {

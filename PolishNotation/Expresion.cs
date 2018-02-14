@@ -5,11 +5,20 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
+    using Enums;
 
-    public class Expression:IEnumerable<ElementaryUnit>
+    public class Expression : IEnumerable<ElementaryUnit>
     {
-        private static readonly char[] binaryOperators = new[] { '+', '-', '*', '/', '^' };
-        private static readonly Dictionary<string, Func<double, double>> unaryFunctions = new Dictionary<string, Func<double, double>>
+        private static readonly IDictionary<char, Func<double, double, double>> binaryOperators = new Dictionary<char, Func<double, double, double>>
+        {
+            {'+', (a,b) => a + b },
+            {'-', (a,b) => a - b },
+            {'*', (a,b) => a * b },
+            {'/', (a,b) => a / b },
+            {'^', (a,b) => Math.Pow(a,b) }
+        };
+
+        private static readonly IDictionary<string, Func<double, double>> unaryFunctions = new Dictionary<string, Func<double, double>>
         {
             {"sin", Math.Sin },
             {"cos", Math.Cos },
@@ -21,97 +30,103 @@
             {"acos",Math.Acos },
             {"asin",Math.Asin },
             {"atan", Math.Atan},
-            {"actg", (number) => 1/Math.Atan(number) },
+            {"arctg", (number) => 1/Math.Atan(number) },
             {"lg",Math.Log10 },
-            {"ln", (number) => Math.Log(number) }
+            {"ln", (number) => Math.Log(number) },
+            {"log10", Math.Log10}
         };
 
-        public static Dictionary<string, double> constans = new Dictionary<string, double>
+        public static IDictionary<string, double> constans = new Dictionary<string, double>
         {
             {"pi",Math.PI },
             {"e",Math.E }
         };
 
-        private static readonly Dictionary<string, Func<double, double, double>> binaryFunction = new Dictionary<string, Func<double, double, double>>
+        private static readonly IDictionary<string, Func<double, double, double>> binaryFunction = new Dictionary<string, Func<double, double, double>>
         {
-            {"log", (a,b) => Math.Log(a,b) }
+            {"log", (a,b) => Math.Log(a,b) },
+            {"test", (a,b) => a + b + 10 }
         };
 
-        private static Expression ToExpresion(string expression)
+        private static Expression ToExpresion(string stringRepresentation)
         {
-            expression = new string(expression.Where(c => c != ' ').ToArray());
+            stringRepresentation = new string(stringRepresentation.Where(c => c != ' ').ToArray());
 
-            StringBuilder buf = new StringBuilder(Convert.ToString(expression[0]));
+            var buf = new StringBuilder(Convert.ToString(stringRepresentation[0]));
 
-            for (int i = 1; i < expression.Length; i++)
+            for (int i = 1; i < stringRepresentation.Length; i++)
             {
-                if (expression[i] == '-' && expression[i - 1] == '(')
+                if (stringRepresentation[i] == '-' && stringRepresentation[i - 1] == '(')
                 {
                     buf.Append("0");
                 }
-                buf.Append(expression[i]);
+                buf.Append(stringRepresentation[i]);
             }
 
-            expression = buf.ToString();
+            stringRepresentation = buf.ToString();
 
-            if (expression[0] == '-') expression = "0" + expression;
-
-            List<ElementaryUnit> result = new List<ElementaryUnit>();
-
-            for (var i = 0; i < expression.Length; i++)
+            if (stringRepresentation[0] == '-') 
             {
-                char c = expression[i];
+                stringRepresentation = "0" + stringRepresentation;
+            }
+
+            var result = new List<ElementaryUnit>();
+
+            for (var i = 0; i < stringRepresentation.Length; i++)
+            {
+                char c = stringRepresentation[i];
 
                 if (c == 'x' || c == 'X')
                 {
-                    result.Add(new ElementaryUnit(Emums.ElementaryUnitType.Variable, Convert.ToString(c)));
+                    result.Add(new ElementaryUnit(ElementaryUnitType.Variable, Convert.ToString(c)));
                     continue;
                 }
 
-                if (binaryOperators.Contains(c))
+                if (binaryOperators.Any(operation => operation.Key == c))
                 {
-                    result.Add(new ElementaryUnit(Emums.ElementaryUnitType.BinaryOperation, Convert.ToString(c)));
+                    result.Add(new ElementaryUnit(ElementaryUnitType.BinaryOperation, Convert.ToString(c)));
                     continue;
                 }
 
                 if (c == '(' || c == ')')
                 {
-                    result.Add(new ElementaryUnit(Emums.ElementaryUnitType.Brackets, Convert.ToString(c)));
+                    result.Add(new ElementaryUnit(ElementaryUnitType.Brackets, Convert.ToString(c)));
                     continue;
                 }
 
                 if (char.IsLetter(c))
                 {
-                    string buffer = string.Empty;
+                    var buffer = string.Empty;
                     var j = i;
-                    for (; j < expression.Length && char.IsLetter(expression[j]); j++)
+                    for (; j < stringRepresentation.Length && char.IsLetter(stringRepresentation[j]); j++)
                     {
-                        buffer += expression[j];
+                        buffer += stringRepresentation[j];
                     }
                     i = j - 1;
 
                     if (unaryFunctions.Keys.Contains(buffer))
-                        result.Add(new ElementaryUnit(Emums.ElementaryUnitType.UnaryFunction, buffer));
+                        result.Add(new ElementaryUnit(ElementaryUnitType.UnaryFunction, buffer));
                     if (binaryFunction.Keys.Contains(buffer))
-                        result.Add(new ElementaryUnit(Emums.ElementaryUnitType.BinaryFunction, buffer));
+                        result.Add(new ElementaryUnit(ElementaryUnitType.BinaryFunction, buffer));
                     if (constans.Keys.Contains(buffer))
-                        result.Add(new ElementaryUnit(Emums.ElementaryUnitType.Constant, buffer));
+                        result.Add(new ElementaryUnit(ElementaryUnitType.Constant, buffer));
                     continue;
                 }
 
                 if (char.IsDigit(c))
                 {
-                    string buffer = string.Empty;
+                    var buffer = string.Empty;
                     var j = i;
-                    for (; j < expression.Length && (char.IsDigit(expression[j]) || expression[j] == '.'); j++)
+                    for (; j < stringRepresentation.Length && (char.IsDigit(stringRepresentation[j]) || stringRepresentation[j] == '.'); j++)
                     {
-                        buffer += expression[j];
+                        buffer += stringRepresentation[j];
                     }
                     i = j - 1;
-                    result.Add(new ElementaryUnit(Emums.ElementaryUnitType.Digit, buffer));
+                    result.Add(new ElementaryUnit(ElementaryUnitType.Digit, buffer));
                 }
 
             }
+            
 
             return new Expression(result);
         }
@@ -124,20 +139,20 @@
             var firstLO = "+-";
             var secondLO = "*/";
 
-            foreach (var el in expression)
+            foreach (var el in expression.expression)
             {
-                if (el.Type == Emums.ElementaryUnitType.Digit || el.Type == Emums.ElementaryUnitType.Variable || el.Type == Emums.ElementaryUnitType.Constant)
+                if (el.Type == ElementaryUnitType.Digit || el.Type == ElementaryUnitType.Variable || el.Type == ElementaryUnitType.Constant)
                 {
                     result.Add(el);
                     continue;
                 }
-                if (el.Type == Emums.ElementaryUnitType.BinaryFunction || el.Type == Emums.ElementaryUnitType.UnaryFunction)
+                if (el.Type == ElementaryUnitType.BinaryFunction || el.Type == ElementaryUnitType.UnaryFunction)
                 {
                     buffer.Push(el);
                     continue;
                 }
 
-                if (el.Type == Emums.ElementaryUnitType.Brackets)
+                if (el.Type == ElementaryUnitType.Brackets)
                 {
                     if (el.Value == ")")
                     {
@@ -145,7 +160,7 @@
                         {
                             result.Add(buffer.Pop());
                         }
-                        if (el.Type == Emums.ElementaryUnitType.BinaryFunction || el.Type == Emums.ElementaryUnitType.UnaryFunction)
+                        if (el.Type == ElementaryUnitType.BinaryFunction || el.Type == ElementaryUnitType.UnaryFunction)
                         {
                             result.Add(buffer.Pop());
                         }
@@ -156,11 +171,11 @@
                     buffer.Push(el);
                 }
 
-                if (el.Type == Emums.ElementaryUnitType.BinaryOperation)
+                if (el.Type == ElementaryUnitType.BinaryOperation)
                 {
                     if (el.Value == "^")
                     {
-                        while (buffer.Count != 0 && (buffer.Peek().Value == "^" || el.Type == Emums.ElementaryUnitType.BinaryFunction || el.Type == Emums.ElementaryUnitType.UnaryFunction))
+                        while (buffer.Count != 0 && (buffer.Peek().Value == "^" || el.Type == ElementaryUnitType.BinaryFunction || el.Type == ElementaryUnitType.UnaryFunction))
                         {
                             result.Add(buffer.Pop());
                             if (buffer.Count == 0) break;
@@ -172,7 +187,7 @@
                     if (firstLO.Contains(el.Value))
                     {
                         if (buffer.Count != 0)
-                            while ((firstLO + secondLO).Contains(buffer.Peek().Value) || buffer.Peek().Value == "^" || buffer.Peek().Type == Emums.ElementaryUnitType.BinaryFunction || buffer.Peek().Type == Emums.ElementaryUnitType.UnaryFunction)
+                            while ((firstLO + secondLO).Contains(buffer.Peek().Value) || buffer.Peek().Value == "^" || buffer.Peek().Type == ElementaryUnitType.BinaryFunction || buffer.Peek().Type == ElementaryUnitType.UnaryFunction)
                             {
                                 result.Add(buffer.Pop());
                                 if (buffer.Count == 0) break;
@@ -183,7 +198,7 @@
                     if (secondLO.Contains(el.Value))
                     {
                         if (buffer.Count != 0)
-                            while ((buffer.Count != 0 && secondLO.Contains(buffer.Peek().Value)) || (buffer.Peek().Value == "^" && buffer.Count != 0) || buffer.Peek().Type == Emums.ElementaryUnitType.BinaryFunction || buffer.Peek().Type == Emums.ElementaryUnitType.UnaryFunction)
+                            while ((buffer.Count != 0 && secondLO.Contains(buffer.Peek().Value)) || (buffer.Peek().Value == "^" && buffer.Count != 0) || buffer.Peek().Type == ElementaryUnitType.BinaryFunction || buffer.Peek().Type == ElementaryUnitType.UnaryFunction)
                             {
                                 result.Add(buffer.Pop());
                                 if (buffer.Count == 0) break;
@@ -195,7 +210,9 @@
             }
 
             while (buffer.Count != 0)
+            {
                 result.Add(buffer.Pop());
+            }
 
             return new Expression(result);
         }
@@ -212,38 +229,28 @@
         {
             var stack = new Stack<double>();
 
-            foreach (var el in expression)
+            foreach (var el in expression.expression)
             {
-                if (el.Type == Emums.ElementaryUnitType.Digit)
+                if (el.Type == ElementaryUnitType.Digit)
                 {
                     stack.Push(Convert.ToDouble(el.Value));
                     continue;
                 }
 
-                if (el.Type == Emums.ElementaryUnitType.Constant)
+                if (el.Type == ElementaryUnitType.Constant)
                 {
                     stack.Push(constans[el.Value]);
                     continue;
                 }
 
-                if (el.Type == Emums.ElementaryUnitType.Variable)
+                if (el.Type == ElementaryUnitType.Variable)
                 {
                     stack.Push(x);
                     continue;
                 }
 
-                if (el.Type == Emums.ElementaryUnitType.UnaryFunction)
+                if (el.Type == ElementaryUnitType.UnaryFunction)
                 {
-                    if (el.Value == "log")
-                    {
-                        var a = stack.Pop();
-
-                        var b = stack.Pop();
-
-                        stack.Push(Math.Log(b, a));
-
-                        continue;
-                    }
                     var f = unaryFunctions[el.Value];
 
                     var arg = stack.Pop();
@@ -251,7 +258,7 @@
                     stack.Push(f(arg));
                 }
 
-                if (el.Type == Emums.ElementaryUnitType.BinaryFunction)
+                if (el.Type == ElementaryUnitType.BinaryFunction)
                 {
                     var a = stack.Pop();
 
@@ -260,18 +267,11 @@
                     stack.Push(binaryFunction[el.Value](b, a));
                 }
 
-                if (el.Type == Emums.ElementaryUnitType.BinaryOperation)
+                if (el.Type == ElementaryUnitType.BinaryOperation)
                 {
                     var a = stack.Pop();
                     var b = stack.Pop();
-                    switch (el.Value)
-                    {
-                        case "+": stack.Push(a + b); break;
-                        case "-": stack.Push(b - a); break;
-                        case "/": stack.Push(b / a); break;
-                        case "*": stack.Push(a * b); break;
-                        case "^": stack.Push(Math.Pow(b, a)); break;
-                    }
+                    stack.Push(binaryOperators[el.Value[0]](a,b));
                 }
             }
 
@@ -289,12 +289,12 @@
             return expression.GetEnumerator();
         }
 
-        internal Expression(List<ElementaryUnit> expresion)
+        internal Expression(ICollection<ElementaryUnit> expresion)
         {
             this.expression = expresion;
         }
 
-        internal List<ElementaryUnit> expression { get; }
+        internal ICollection<ElementaryUnit> expression { get; }
 
         public override string ToString()
         {
@@ -316,6 +316,7 @@
         public static double Calculate(string expression, double x = 0)
         {
             var exp = ToExpresion(expression);
+            //exp.Select(e => e.Type.ToString()).ToList().ForEach(Console.WriteLine);
             var inversePolishNotation = ToPolishNotation(exp);
             return Calculate(inversePolishNotation, x);
         }

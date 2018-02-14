@@ -1,21 +1,17 @@
 ﻿namespace PolishNotation
 {
-    using Emums;
+    using Enums;
 
     internal class ElementaryUnit
     {
-        private ElementaryUnitType type;
+        public ElementaryUnitType Type { get; }
 
-        private string value;
-
-        public ElementaryUnitType Type { get { return type; } }
-
-        public string Value { get { return value; } }
+        public string Value { get; }
 
         public ElementaryUnit(ElementaryUnitType type, string value)
         {
-            this.type = type;
-            this.value = value;
+            this.Type = type;
+            this.Value = value;
         }
     }
 }
