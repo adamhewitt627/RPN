@@ -1,22 +1,19 @@
-using System;
 using Xunit;
-using PolishNotation;
 
-namespace PolishNotation.Tests
+namespace PolishNotation.Tests;
+
+public class ExpressionTests
 {
-    public class ExpressionTests
+    [Fact]
+    public void Test1()
     {
-        [Fact]
-        public void Test1()
-        {
-            // Arrange
-            var stringExpression = "5";
+        // Arrange
+        string stringExpression = "5";
 
-            // Act
-            var result = Expression.Calculate(stringExpression);
+        // Act
+        double result = Expression.Calculate(stringExpression);
 
-            // Assert
-            Assert.Equal(5, result);
-        }
+        // Assert
+        Assert.Equal(5, result);
     }
 }

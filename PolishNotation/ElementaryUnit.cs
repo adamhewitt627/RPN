@@ -1,17 +1,15 @@
-﻿namespace PolishNotation
+﻿namespace PolishNotation;
+
+internal record ElementaryUnit(ElementaryUnitType Type, string Value);
+
+internal enum ElementaryUnitType
 {
-    using Enums;
-
-    internal class ElementaryUnit
-    {
-        public ElementaryUnitType Type { get; }
-
-        public string Value { get; }
-
-        public ElementaryUnit(ElementaryUnitType type, string value)
-        {
-            this.Type = type;
-            this.Value = value;
-        }
-    }
+    Digit,
+    BinaryOperation,
+    UnaryOperation,
+    UnaryFunction,
+    BinaryFunction,
+    Brackets,
+    Variable,
+    Constant
 }
