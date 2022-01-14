@@ -32,4 +32,6 @@ jobs:
       run: dotnet pack --configuration release --no-build --output .
 
     - name: Push
-      run: dotnet nuget push "*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
+      run: |
+        dotnet nuget add source --username adamhewitt627 --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/adamhewitt627/index.json"
+        dotnet nuget push "*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
