@@ -10,4 +10,8 @@
     <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <VersionPrefix>2.0.0</VersionPrefix>
+  </PropertyGroup>
+
 </Project>
