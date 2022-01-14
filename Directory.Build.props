@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Title>RPN.NET</Title>
     <Authors>Adam Hewitt</Authors>
     <Copyright>2020-$([System.DateTime]::Now.ToString('yyyy'))</Copyright>
     <VersionPrefix>1.0.0</VersionPrefix>
