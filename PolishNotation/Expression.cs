@@ -6,19 +6,13 @@ using System.Text;
 
 namespace PolishNotation;
 
-
 public class Expression : IEnumerable<ElementaryUnit>
 {
-    private static readonly Dictionary<char, Func<double, double, double>> binaryOperators = new()
-    {
-        { '+', (a, b) => a + b },
-        { '-', (a, b) => a - b },
-        { '*', (a, b) => a * b },
-        { '/', (a, b) => a / b },
-        { '^', (a, b) => Math.Pow(a, b) }
-    };
+    private readonly List<ElementaryUnit> _Expression;
 
-    private static readonly Dictionary<string, Func<double, double>> unaryFunctions = new()
+    private static HashSet<char> BinaryOperators { get; } = new() { '+', '-', '*', '/', '^' };
+
+    private static Dictionary<string, Func<double, double>> UnaryFunctions { get; } = new()
     {
         { "sin", Math.Sin },
         { "cos", Math.Cos },
@@ -30,10 +24,9 @@ public class Expression : IEnumerable<ElementaryUnit>
         { "acos", Math.Acos },
         { "asin", Math.Asin },
         { "atan", Math.Atan },
-        { "arctg", (number) => 1 / Math.Atan(number) },
+        { "actg", (number) => 1 / Math.Atan(number) },
         { "lg", Math.Log10 },
-        { "ln", (number) => Math.Log(number) },
-        { "log10", Math.Log10 }
+        { "ln", (number) => Math.Log(number) }
     };
 
     private static Dictionary<string, double> Constants { get; } = new()
@@ -42,104 +35,108 @@ public class Expression : IEnumerable<ElementaryUnit>
         { "e", Math.E }
     };
 
-    private static readonly Dictionary<string, Func<double, double, double>> binaryFunction = new()
+    private static Dictionary<string, Func<double, double, double>> BinaryFunctions { get; } = new()
     {
-        { "log", (a, b) => Math.Log(a, b) },
-        { "test", (a, b) => a + b + 10 }
+        { "log", (a, b) => Math.Log(a, b) }
     };
 
-    private static Expression ToExpresion(string stringRepresentation)
+    private Expression(List<ElementaryUnit> expression)
     {
-        stringRepresentation = new string(stringRepresentation.Where(c => c != ' ').ToArray());
+        _Expression = expression;
+    }
 
-        StringBuilder buf = new(Convert.ToString(stringRepresentation[0]));
 
-        for (int i = 1; i < stringRepresentation.Length; i++)
+    private static Expression ToExpression(string expression)
+    {
+        expression = Fixup(expression);
+
+        List<ElementaryUnit> result = new();
+
+        for (var i = 0; i < expression.Length; i++)
         {
-            if (stringRepresentation[i] == '-' && stringRepresentation[i - 1] == '(')
+            char c = expression[i];
+
+            switch (c)
             {
-                buf.Append('0');
+                case 'x' or 'X':
+                    result.Add(new ElementaryUnit(ElementaryUnitType.Variable, Convert.ToString(c)));
+                    break;
+
+                case '(' or ')':
+                    result.Add(new ElementaryUnit(ElementaryUnitType.Brackets, Convert.ToString(c)));
+                    break;
+
+                case { } when BinaryOperators.Contains(c):
+                    result.Add(new ElementaryUnit(ElementaryUnitType.BinaryOperation, Convert.ToString(c)));
+                    break;
+
+                case { } when char.IsLetter(c):
+                    {
+                        string buffer = Collect(expression, i, char.IsLetter);
+                        i += buffer.Length - 1;
+
+                        if (UnaryFunctions.ContainsKey(buffer))
+                            result.Add(new ElementaryUnit(ElementaryUnitType.UnaryFunction, buffer));
+                        else if (BinaryFunctions.ContainsKey(buffer))
+                            result.Add(new ElementaryUnit(ElementaryUnitType.BinaryFunction, buffer));
+                        else if (Constants.ContainsKey(buffer))
+                            result.Add(new ElementaryUnit(ElementaryUnitType.Constant, buffer));
+                    }
+                    break;
+
+                case { } when char.IsDigit(c):
+                    {
+                        string buffer = Collect(expression, i, x => char.IsDigit(x) || x == '.');
+                        i += buffer.Length - 1;
+                        result.Add(new ElementaryUnit(ElementaryUnitType.Digit, buffer));
+                    }
+                    break;
             }
-            buf.Append(stringRepresentation[i]);
         }
-
-        stringRepresentation = buf.ToString();
-
-        if (stringRepresentation[0] == '-')
-        {
-            stringRepresentation = "0" + stringRepresentation;
-        }
-
-        List<ElementaryUnit>? result = new();
-
-        for (int i = 0; i < stringRepresentation.Length; i++)
-        {
-            char c = stringRepresentation[i];
-
-            if (c == 'x' || c == 'X')
-            {
-                result.Add(new ElementaryUnit(ElementaryUnitType.Variable, Convert.ToString(c)));
-                continue;
-            }
-
-            if (binaryOperators.Any(operation => operation.Key == c))
-            {
-                result.Add(new ElementaryUnit(ElementaryUnitType.BinaryOperation, Convert.ToString(c)));
-                continue;
-            }
-
-            if (c == '(' || c == ')')
-            {
-                result.Add(new ElementaryUnit(ElementaryUnitType.Brackets, Convert.ToString(c)));
-                continue;
-            }
-
-            if (char.IsLetter(c))
-            {
-                string? buffer = string.Empty;
-                int j = i;
-                for (; j < stringRepresentation.Length && char.IsLetter(stringRepresentation[j]); j++)
-                {
-                    buffer += stringRepresentation[j];
-                }
-                i = j - 1;
-
-                if (unaryFunctions.ContainsKey(buffer))
-                    result.Add(new ElementaryUnit(ElementaryUnitType.UnaryFunction, buffer));
-                if (binaryFunction.ContainsKey(buffer))
-                    result.Add(new ElementaryUnit(ElementaryUnitType.BinaryFunction, buffer));
-                if (Constants.ContainsKey(buffer))
-                    result.Add(new ElementaryUnit(ElementaryUnitType.Constant, buffer));
-                continue;
-            }
-
-            if (char.IsDigit(c))
-            {
-                string? buffer = string.Empty;
-                int j = i;
-                for (; j < stringRepresentation.Length && (char.IsDigit(stringRepresentation[j]) || stringRepresentation[j] == '.'); j++)
-                {
-                    buffer += stringRepresentation[j];
-                }
-                i = j - 1;
-                result.Add(new ElementaryUnit(ElementaryUnitType.Digit, buffer));
-            }
-
-        }
-
 
         return new Expression(result);
+
+
+        static string Collect(string expression, int from, Func<char, bool> takeWhile)
+        {
+            int end = from;
+            for (; end < expression.Length && takeWhile(expression[end]); end++) { }
+
+            return expression.Substring(from, end - from);
+        }
+
+        static string Fixup(string expression)
+        {
+            StringBuilder builder = new();
+            char[] stringRepresentation = expression.Where(c => c != ' ').ToArray();
+
+            if (stringRepresentation[0] == '-') builder.Append('-');
+            builder.Append(stringRepresentation[0]);
+
+            for (int i = 1; i < stringRepresentation.Length; i++)
+            {
+                if (stringRepresentation[i] is '-' && stringRepresentation[i - 1] is '(')
+                {
+                    builder.Append('0');
+                }
+
+                builder.Append(stringRepresentation[i]);
+            }
+
+            return builder.ToString();
+        }
+
     }
 
     private static Expression ToPolishNotation(Expression expression)
     {
-        List<ElementaryUnit>? result = new();
-        Stack<ElementaryUnit>? buffer = new();
+        List<ElementaryUnit> result = new();
+        Stack<ElementaryUnit> buffer = new();
 
-        string? firstLO = "+-";
-        string? secondLO = "*/";
+        var firstLO = "+-";
+        var secondLO = "*/";
 
-        foreach (ElementaryUnit? el in expression._Expression)
+        foreach (var el in expression)
         {
             if (el.Type == ElementaryUnitType.Digit || el.Type == ElementaryUnitType.Variable || el.Type == ElementaryUnitType.Constant)
             {
@@ -210,26 +207,16 @@ public class Expression : IEnumerable<ElementaryUnit>
         }
 
         while (buffer.Count != 0)
-        {
             result.Add(buffer.Pop());
-        }
 
         return new Expression(result);
     }
 
-    private static Func<double, double> ToFunc(Expression expression)
-    {
-        return (x) =>
-        {
-            return Calculate(expression, x);
-        };
-    }
-
     private static double Calculate(Expression expression, double x)
     {
-        Stack<double>? stack = new();
+        Stack<double> stack = new();
 
-        foreach (ElementaryUnit? el in expression._Expression)
+        foreach (var el in expression)
         {
             if (el.Type == ElementaryUnitType.Digit)
             {
@@ -251,27 +238,44 @@ public class Expression : IEnumerable<ElementaryUnit>
 
             if (el.Type == ElementaryUnitType.UnaryFunction)
             {
-                Func<double, double>? f = unaryFunctions[el.Value];
+                if (el.Value == "log")
+                {
+                    var a = stack.Pop();
 
-                double arg = stack.Pop();
+                    var b = stack.Pop();
+
+                    stack.Push(Math.Log(b, a));
+
+                    continue;
+                }
+                var f = UnaryFunctions[el.Value];
+
+                var arg = stack.Pop();
 
                 stack.Push(f(arg));
             }
 
             if (el.Type == ElementaryUnitType.BinaryFunction)
             {
-                double a = stack.Pop();
+                var a = stack.Pop();
 
-                double b = stack.Pop();
+                var b = stack.Pop();
 
-                stack.Push(binaryFunction[el.Value](b, a));
+                stack.Push(BinaryFunctions[el.Value](b, a));
             }
 
             if (el.Type == ElementaryUnitType.BinaryOperation)
             {
-                double a = stack.Pop();
-                double b = stack.Pop();
-                stack.Push(binaryOperators[el.Value[0]](a, b));
+                var a = stack.Pop();
+                var b = stack.Pop();
+                switch (el.Value)
+                {
+                    case "+": stack.Push(a + b); break;
+                    case "-": stack.Push(b - a); break;
+                    case "/": stack.Push(b / a); break;
+                    case "*": stack.Push(a * b); break;
+                    case "^": stack.Push(Math.Pow(b, a)); break;
+                }
             }
         }
 
@@ -279,7 +283,27 @@ public class Expression : IEnumerable<ElementaryUnit>
         return stack.Pop();
     }
 
-    internal IEnumerator<ElementaryUnit> GetEnumerator()
+    public override string ToString()
+    {
+        return string.Join(" ", _Expression.Select(u => u.Value));
+    }
+
+    public static Func<double, double> ToDelegate(string expression)
+    {
+        var exp = ToExpression(expression);
+        var inversePolishNotation = ToPolishNotation(exp);
+
+        return x => Calculate(exp, x);
+    }
+
+    public static double Calculate(string expression, double x = 0)
+    {
+        var exp = ToExpression(expression);
+        var inversePolishNotation = ToPolishNotation(exp);
+        return Calculate(inversePolishNotation, x);
+    }
+
+    IEnumerator<ElementaryUnit> IEnumerable<ElementaryUnit>.GetEnumerator()
     {
         return _Expression.GetEnumerator();
     }
@@ -289,40 +313,4 @@ public class Expression : IEnumerable<ElementaryUnit>
         return _Expression.GetEnumerator();
     }
 
-    internal Expression(ICollection<ElementaryUnit> expression)
-    {
-        _Expression = expression;
-    }
-
-    private readonly ICollection<ElementaryUnit> _Expression;
-
-    public override string ToString()
-    {
-        string res = string.Empty;
-        foreach (ElementaryUnit? el in _Expression)
-        {
-            res += el.Value + " ";
-        }
-        return res;
-    }
-
-    public static Func<double, double> ToDelegate(string expression)
-    {
-        Expression exp = ToExpresion(expression);
-        Expression inversePolishNotation = ToPolishNotation(exp);
-        return ToFunc(inversePolishNotation);
-    }
-
-    public static double Calculate(string expression, double x = 0)
-    {
-        Expression exp = ToExpresion(expression);
-        //exp.Select(e => e.Type.ToString()).ToList().ForEach(Console.WriteLine);
-        Expression inversePolishNotation = ToPolishNotation(exp);
-        return Calculate(inversePolishNotation, x);
-    }
-
-    IEnumerator<ElementaryUnit> IEnumerable<ElementaryUnit>.GetEnumerator()
-    {
-        return _Expression.GetEnumerator();
-    }
 }
