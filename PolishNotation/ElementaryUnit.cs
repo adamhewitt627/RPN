@@ -1,6 +1,6 @@
 ﻿namespace PolishNotation;
 
-internal record ElementaryUnit(ElementaryUnitType Type, string Value);
+internal record struct ElementaryUnit(ElementaryUnitType Type, string Value);
 
 internal enum ElementaryUnitType
 {
